@@ -39,7 +39,7 @@
 					</view>
 					<view class="publish-count">{{detailInfo.readSum}}人看过</view>
 				</view>
-				<view class="publish-desc">{{detailInfo.petIntroduction}}</view>
+				<view class="publish-desc">{{detailInfo.petAdoptionRequirements}}</view>
 			</view>
 			<view class="adoption">
 				<view class="adoption-top">如需领养，请通过以下方式联系</view>
@@ -90,14 +90,13 @@
 			<view class="list" @click="copyData(detailInfo.petContactsWx)">复制微信号</view>
 		</action-sheet>
 		<action-sheet class="action-sheet-container" v-if="showMore" @close="closeAction">
-			<view v-if="$store.state.user === detailInfo.createUserId">
+			<view v-if="curUserCreate">
 				<view class="list" @click="handleDeletePet">删除内容</view>
 				<view class="list" @click="handleEditPet">编辑内容</view>
 				<view class="list" @click="completePetStatus">设置为『已被领养』</view>
 			</view>
 			<view v-else class="list" @click="handleComplaintPet">举报</view>
 		</action-sheet>
-
 		<canvas-poster v-if="showPoster" :detailInfo="detailInfo" @close="closeModal"></canvas-poster>
 	</view>
 </template>
@@ -142,6 +141,7 @@
 		showWechat: boolean = false
 		showMore: boolean = false
 		showPoster: boolean = false
+		curUserCreate: boolean = false
 		basicInfo = [
 			[
 				{
@@ -205,7 +205,6 @@
 		]
 
 		onLoad (option: any) {
-			console.log(this.$store.state.user)
 			this.petId = option.petId
 			this.getReadCount(option)
 		}
@@ -227,6 +226,7 @@
 		getDetail (id: number) {
 			apiPetDetail(id).then((res: object) => {
 				this.detailInfo = res
+				this.curUserCreate = this.$store.state.user.userId === this.detailInfo.createUserId
 			})
 		}
 

@@ -27,3 +27,6 @@ export const petCostAdoption = {
 
 // 宠物年龄
 export const petAge = ['0-3个月', '3-6个月', '6-9个月', '小于1岁', '小于2岁', '小于3岁', '3岁以上']
+
+// 宠物收养来源
+export const petSource = ['流浪', '家养', '救助站']

@@ -7,7 +7,7 @@
 		<view class="content">
 			<view class="header info">
 				<view class="title">说说宠物情况以及领养要求</view>
-				<textarea name="" id="" placeholder="输入宠物信息" v-model="releasePetInfo.petAdoptionRequirements" class="pet-info" placeholder-class="placeholder-class	"></textarea>
+				<textarea name="" id="" placeholder="输入宠物信息" v-model="releasePetInfo.petAdoptionRequirements" class="pet-info" placeholder-class="placeholder"></textarea>
 				<img-upload :limit="6" :multipleJudge="true" @imgUpload="imgUpload($event,'petImages')"></img-upload>
 			</view>
 			<view class="contact-info info">
@@ -29,7 +29,7 @@
 				<view class="title">更多信息</view>
 				<view class="line">
 					<label>宠物昵称</label>
-					<input v-model="releasePetInfo.petName" placeholder-class="placeholder" maxlength="11" placeholder="输入宠物昵称" type="text">
+					<input v-model="releasePetInfo.petNikeName" placeholder-class="placeholder" maxlength="11" placeholder="输入宠物昵称" type="text">
 				</view>
 				<view class="line">
 					<label>所在城市</label>
@@ -37,15 +37,19 @@
 				</view>
 				<view class="line">
 					<label>品种</label>
-					<!--<pet-picker @changePicker="changePicker($event,'')" :option="areaPickerConfig" class="picker"></pet-picker>-->
+					<span @click="showAssortment = true">{{releasePetInfo.petAssortment || '请选择品种'}}</span>
 				</view>
 				<view class="line">
 					<label>年龄</label>
-					<input v-model="releasePetInfo.petAge" placeholder-class="placeholder" maxlength="11" placeholder="输入宠物年龄" type="text">
+					<picker @change="bindAgeChange" :value="petAgeIndex" :range="petAgeList">
+						<view class="uni-input">{{petAgeList[petAgeIndex]}}</view>
+					</picker>
 				</view>
 				<view class="line">
 					<label>收养类型</label>
-					<!--<pet-picker @changePicker="changePicker($event,'area')" :option="areaPickerConfig" class="picker"></pet-picker>-->
+					<picker @change="bindSourceChange" :value="petSourceIndex" :range="petSourceList">
+						<view class="uni-input">{{petSourceList[petSourceIndex]}}</view>
+					</picker>
 				</view>
 				<view class="line">
 					<label>性别</label>
@@ -86,24 +90,43 @@
 						<radio :value="3">有偿</radio>
 					</radio-group>
 				</view>
-				<view class="line">
-					<label>押金金额</label>
+				<view class="line" v-if="releasePetInfo.petCostAdoption === 2 || releasePetInfo.petCostAdoption === 3">
+					<label>{{releasePetInfo.petCostAdoption === 2 ? '押金金额(元)' : '有偿金额(元)'}}</label>
+					<input v-model="releasePetInfo.petDepositAmount" placeholder-class="placeholder" placeholder="输入金额" type="digit">
 				</view>
 			</view>
 		</view>
 
 		<button :disabled="canSubmit" class="submit btn" @click="submit">确认发布领养信息</button>
+
+		<view class="picker-view-wrap" v-if="showAssortment">
+			<view class="picker-view-inner">
+				<view class="u-flex-b-c">
+					<view class="picker-view-btn" @click="showAssortment = false">取消</view>
+					<view class="picker-view-btn" @click="handlePickerView">确定</view>
+				</view>
+				<picker-view class="picker-view" :indicator-style="indicatorStyle" :value="assortment" @change="bindAssortmentChange">
+					<picker-view-column>
+						<view class="item" v-for="(item,index) in dicList" :key="index">{{item.dicDesc}}</view>
+					</picker-view-column>
+					<picker-view-column>
+						<view class="item" v-for="(item,index) in childDicList" :key="index">{{item.dicDesc}}</view>
+					</picker-view-column>
+				</picker-view>
+			</view>
+		</view>
 	</view>
 </template>
 
 <script lang="ts">
-	import { Component, Vue } from 'vue-property-decorator';
-	import { NavBarOptions } from '@/interfaces/navBar';
-	import ImgUpload from '@components/ImgUpload.vue';
-	import PetPicker from '@components/PetPicker.vue';
-	import { PickerOptions } from '@/interfaces/petPicker';
-	import { apiPetRelease } from '@/service/api';
-	import { uSwitchTab } from '@/utils/navigateAction';
+	import { Component, Vue } from 'vue-property-decorator'
+	import { NavBarOptions } from '@/interfaces/navBar'
+	import ImgUpload from '@components/ImgUpload.vue'
+	import PetPicker from '@components/PetPicker.vue'
+	import { PickerOptions } from '@/interfaces/petPicker'
+	import { apiPetRelease, apiPetAssortment, apiChildPetAssortment } from '@/service/api'
+	import { uSwitchTab } from '@/utils/navigateAction'
+	import { petAge, petSource } from '@/utils/const'
 
 	@Component({
 		components: { ImgUpload, PetPicker }
@@ -114,17 +137,25 @@
 			backgroundColor: '#EC6863',
 			title: '发布领养信息',
 			back: false
-		};
-		canSubmit: boolean = false; // 是否可提交
+		}
+		dicObj: any = {}
+		dicList: any[] = []
+		dic: string = ''
+		childDicList: any[] = []
+		childDic: string = ''
+		assortment: any[] = [0, 0]
+		indicatorStyle: string = ''
+		showAssortment: boolean = false
+		canSubmit: boolean = false // 是否可提交
 		releasePetInfo: any = {
 			petAdoptionRequirements: '', // 收养要求
 			petContactsName: '', // 联系人名字
 			petContactsPhone: '', // 联系人电话
 			petContactsWx: '', // 联系人微信号
 			petContactsWxQccodeUrl: '', // 联系人微信二维码
-			petName: '', // name
+			petNikeName: '', // name
 			petAge: '', // age
-			petAssortment: 1, // 品种
+			petAssortment: '', // 品种
 			petSource: '', // 收养类型
 			petProvince: '', // 所在地-省
 			petCity: '', // 所在地-市
@@ -135,21 +166,32 @@
 			petInsectRepellent: 1, // 驱虫
 			petIsVaccine: 1, // 疫苗
 			petCostAdoption: 2,
-			petDepositAmount: 0 // 押金
-		};
+			petDepositAmount: '' // 押金
+		}
 		// 可选地区参数
 		areaPickerConfig: PickerOptions = {
 			mode: 'region',
 			region: ['全国', '', '']
-		};
+		}
+		petAgeList = petAge
+		petAgeIndex: number = 0
+		petSourceList = petSource
+		petSourceIndex = 0
+
+		onShow () {
+			this.getPetAssortment()
+			this.indicatorStyle = `height: ${ Math.round(uni.getSystemInfoSync().screenWidth / (750 / 100)) }px;`
+			this.releasePetInfo.petAge = this.petAgeList[0]
+			this.releasePetInfo.petSource = this.petSourceList[0]
+		}
 
 		/**
 		 * 单选
 		 * @param $event
 		 * @param name
 		 */
-		radioChange($event: any, name: string) {
-			this.releasePetInfo[name] = +$event.detail.value;
+		radioChange ($event: any, name: string) {
+			this.releasePetInfo[name] = +$event.detail.value
 		};
 
 		/**
@@ -157,7 +199,7 @@
 		 * @param $event
 		 * @param name
 		 */
-		changePicker($event: any, name: string) {
+		changePicker ($event: any, name: string) {
 			switch (name) {
 				case 'area':
 					[this.releasePetInfo.petProvince, this.releasePetInfo.petCity, this.releasePetInfo.petDistrict] = $event
@@ -168,20 +210,59 @@
 
 		};
 
-		async submit() {
-			await apiPetRelease(this.releasePetInfo);
-			uni.showToast({ title: '发布成功' });
+		async submit () {
+			await apiPetRelease(this.releasePetInfo)
+			uni.showToast({ title: '发布成功' })
 		}
 
-		imgUpload($event: any, name: string) {
-			if (name === 'petImages') this.releasePetInfo[name] = $event;
+		imgUpload ($event: any, name: string) {
+			if (name === 'petImages') this.releasePetInfo[name] = $event
 		}
 
 		/**
 		 * 取消发布
 		 */
-		handleCancel() {
-			uSwitchTab('/pages/preview/index');
+		handleCancel () {
+			uSwitchTab('/pages/preview/index')
+		}
+
+		bindAgeChange (e: any) {
+			this.petAgeIndex = e.target.value
+			this.releasePetInfo.petAge = this.petAgeList[this.petAgeIndex]
+		}
+
+		bindSourceChange (e: any) {
+			this.petSourceIndex = e.target.value
+			this.releasePetInfo.petSource = this.petSourceList[this.petSourceIndex]
+		}
+
+		bindAssortmentChange (e: any) {
+			let assortment = e.detail.value
+			this.assortment = e.detail.value
+			this.dic = this.dicList[assortment[0]].dicCode
+			this.childDicList = this.dicObj[this.dic]
+			this.childDic = this.childDicList[assortment[1]].dicCode
+		}
+
+		getPetAssortment () {
+			apiPetAssortment().then(res => {
+				this.dicList = [...this.dicList, ...res]
+				this.dic = this.dicList[0].dicCode
+				for (let i = 0; i < this.dicList.length; i++) {
+					apiChildPetAssortment(this.dicList[i].dicCode).then(res => {
+						if (i === 0) {
+							this.childDicList = [...this.childDicList, ...res]
+							this.childDic = this.childDicList[0].dicCode
+						}
+						this.dicObj[this.dicList[i].dicCode] = res
+					})
+				}
+			})
+		}
+
+		handlePickerView () {
+			this.showAssortment = false
+			this.releasePetInfo.petAssortment = this.childDicList[Number(this.assortment[1])].dicDesc
 		}
 	}
 </script>
@@ -213,7 +294,7 @@
 			.line {
 				.flex-box-align-justify(space-between, center);
 				font-size: 24px;
-				border-bottom: 2px solid #878787;
+				border-bottom: 2px solid rgba(220, 220, 220, 0.3);
 				height: 70px;
 				&.no-border {
 					border: none
@@ -246,5 +327,49 @@
 			clear: both;
 			z-index: 9;
 		}
+
+		.picker-view-wrap {
+			position: fixed;
+			z-index: 10000;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			background: rgba(0, 0, 0, 0.4);
+			height: 100vh;
+			width: 100vw;
+			.picker-view-inner {
+				position: absolute;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				width: 100%;
+				height: 40%;
+				background-color: rgba(255, 255, 255, 1);
+
+				.picker-view {
+					height: 70%;
+				}
+
+				.item {
+					text-align: center;
+					width: 100%;
+					height: 100px;
+					line-height: 100px;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					font-size: 20px;
+				}
+
+				.picker-view-btn {
+					padding: 20px 40px;
+				}
+			}
+		}
+
 	}
 </style>

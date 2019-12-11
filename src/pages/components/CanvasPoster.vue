@@ -51,7 +51,7 @@
 				'../../static/poster-img/top-dog.png',
 				'../../static/poster-img/top-pet.png',
 				'https://xcauto-static.oss-cn-beijing.aliyuncs.com/pic/20190613/code.jpg',
-				// this.detailInfo.petImages[0]
+				this.detailInfo.petImages[0]
 			]
 			for (let i = 0; i < imgArr.length; i++) {
 				await this.dealImg(imgArr[i])
@@ -97,7 +97,7 @@
 			context.setLineWidth(1)
 			context.setStrokeStyle('#434343')
 			context.strokeRect(6 * rpx, 78 * rpx, 146 * rpx, 120 * rpx)
-			// context.drawImage(this.staticImg[9], 6 * rpx, 78 * rpx, 146 * rpx, 120 * rpx)
+			context.drawImage(this.staticImg[9], 6 * rpx, 78 * rpx, 146 * rpx, 120 * rpx)
 
 			context.setFillStyle('#fff')
 			context.setFontSize(10)
@@ -110,7 +110,7 @@
 			let baseTop = 78 + 7 * 18
 			let introTop = baseTop + 28
 			let name = this.detailInfo.petNikeName ? `我叫${this.detailInfo.petNikeName}，` : ''
-			let introText = `${name}我是一只${this.detailInfo.petAge}大的${this.detailInfo.petAssortmentName}{petSex[this.detailInfo.petSex]}，我在${this.detailInfo.petCity + this.detailInfo.petDistrict}，希望你能接我回家，包养我的余生。`
+			let introText = `${name}我是一只${this.detailInfo.petAge}大的${this.detailInfo.petAssortmentName}{${petSex[this.detailInfo.petSex]}}，我在${this.detailInfo.petCity + this.detailInfo.petDistrict}，希望你能接我回家，包养我的余生。`
 			let introHeight = this.textFill(context, introText, introTop, lineHeight)
 
 			context.drawImage(concatStr + this.staticImg[0], 4 * rpx, (introHeight + 4) * rpx, 98 * rpx, 15 * rpx)
@@ -147,7 +147,7 @@
 
 		textFill (ctx: any, txt: string, top: number, lineHeight: number = 20) {
 			let rpx = this.screenWidth
-			const rowNum = 18 // 字数
+			let rowNum = parseInt(String(18 * rpx)) // 字数
 			while (txt) {
 				const fillTxt = txt.slice(0, rowNum)
 				ctx.fillText(fillTxt, 10 * rpx, top * rpx)

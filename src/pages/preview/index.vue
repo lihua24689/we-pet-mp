@@ -74,7 +74,7 @@
 		pageSize: number = 10
 		total: number = -1
 
-		created () {
+		onShow () {
 			this.getPetAssortment()
 			this.getList(this.page, this.pageSize)
 		}

@@ -12,7 +12,7 @@
 		</view>
 		<view class="item-content" @click="detailClick(petInfo.petId)">
 			<view class="name u-fz-big">
-				<text class="u-fz-w">{{petInfo.petAssortmentName}}</text>
+				<text class="u-fz-w">{{petInfo.petNikeName}}</text>
 				<text>({{petInfo.petAge}}，{{petSex[petInfo.petSex]}})</text>
 			</view>
 			<view class="desc u-text-clamp-3">
