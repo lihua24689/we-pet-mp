@@ -107,8 +107,7 @@
 			}
 			apiPetList(params).then((res) => {
 				this.total = res.total
-				let data = (<PetItemInfo[]>res.items).filter((item) => item.effectiveStatus === 0)
-				this.petList = this.petList.concat(data)
+				this.petList = this.petList.concat(res.items)
 			})
 		}
 

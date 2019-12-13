@@ -180,7 +180,7 @@
 
 		onShow () {
 			this.getPetAssortment()
-			this.indicatorStyle = `height: ${ Math.round(uni.getSystemInfoSync().screenWidth / (750 / 100)) }px;`
+			this.indicatorStyle = `height: ${ Math.round(<any>uni.getSystemInfoSync().screenWidth / (750 / 100)) }px;`
 			this.releasePetInfo.petAge = this.petAgeList[0]
 			this.releasePetInfo.petSource = this.petSourceList[0]
 		}
@@ -213,6 +213,7 @@
 		async submit () {
 			await apiPetRelease(this.releasePetInfo)
 			uni.showToast({ title: '发布成功' })
+			uSwitchTab('/pages/preview/index')
 		}
 
 		imgUpload ($event: any, name: string) {
